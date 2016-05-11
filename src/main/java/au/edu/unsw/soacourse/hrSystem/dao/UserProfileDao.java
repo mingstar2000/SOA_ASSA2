@@ -4,7 +4,7 @@ import java.util.List;
 
 import au.edu.unsw.soacourse.hrSystem.model.UserProfile;
 public class UserProfileDao {
-	public static String dbAddr = "jdbc:sqlite:C:/cs9322-Prac/workspace/FoundITService/db/foundITServer.db";  
+	public static String dbAddr = "jdbc:sqlite:c:/cs9322-Prac/workspace/FoundITService/db/foundITServer.db";  
 	
 	public  UserProfile put(UserProfile userProfile){
 	         StringBuilder sql = new StringBuilder();
