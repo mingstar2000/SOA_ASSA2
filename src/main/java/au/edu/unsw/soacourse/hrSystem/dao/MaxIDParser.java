@@ -18,4 +18,5 @@ public class MaxIDParser implements ResultSetParser<String> {
         }
         return IDs;
     }
+    
 }
