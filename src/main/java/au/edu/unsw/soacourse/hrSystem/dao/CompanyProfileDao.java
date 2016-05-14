@@ -3,6 +3,7 @@ import java.sql.*;
 import java.util.List;
 
 import au.edu.unsw.soacourse.hrSystem.model.CompanyProfile;
+import au.edu.unsw.soacourse.hrSystem.model.UserProfile;
 
 //TODO: consider example value like 'Sunny's company' -> it can cause error because of "'" 
 public class CompanyProfileDao {
@@ -17,7 +18,7 @@ public class CompanyProfileDao {
 	         sql.append(", indType ='").append(companyProfile.getIndType()).append("'");
 	         sql.append(", webSite ='").append(companyProfile.getWebSite()).append("'");
 	         sql.append(", cmpDsp ='").append(companyProfile.getCmpDsp()).append("'");
-	         sql.append("WHERE cmpID = '").append(companyProfile.getId()).append("';");
+	         sql.append(" WHERE cmpID = '").append(companyProfile.getId()).append("';");
 	         System.out.println("sql is "+sql.toString()+"\n");
 	         
 	        // ConnectDB.updateDB(dbAddr, sql.toString());
@@ -55,16 +56,17 @@ public class CompanyProfileDao {
             return false;
         }
 
-}
+	}
 	public  CompanyProfile get(String cmpID) {
-         String sql = "SELECT * FROM tb_companyProfile where cmpID='"+cmpID+"';";
-         try {
-             List<CompanyProfile> files  = ConnectDB.executeSQL(dbAddr,sql, new CompanyProfileParser());
-             if(files != null && !files.isEmpty())
-                 return files.get(0);
-         } catch (SQLException e) {
-             e.printStackTrace();
-         }
+        String sql = "SELECT * FROM tb_companyProfile where cmpID='"+cmpID+"';";
+        System.out.println(sql);
+        try {
+            List<CompanyProfile> files  = ConnectDB.executeSQL(dbAddr,sql, new CompanyProfileParser());
+            if(files != null && !files.isEmpty())
+                return files.get(0);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 	return null;
 	}
 
@@ -77,7 +79,23 @@ public class CompanyProfileDao {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        
 	return null;
 	}
 
+	//TODO: if there is no data...
+	public String max() {
+        String sql = "SELECT MAX(cmpID) FROM tb_companyProfile;";
+        try {
+        	System.out.println(sql);
+            List<String> maxID  = ConnectDB.executeSQL(dbAddr,sql, new MaxIDParser());
+            System.out.println(maxID.get(0));
+            if(maxID != null && !maxID.isEmpty())
+                return maxID.get(0);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        
+	return null;
+	}
 }

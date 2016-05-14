@@ -1,13 +1,11 @@
 package au.edu.unsw.soacourse.hrSystem.model;
 
-import java.util.UUID;
-
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 public class CompanyProfile {
 
-    private String cmpid = "";
+    private String cmpID = "";
     private String name = "";
     private String email = "";
     private String addr;
@@ -15,20 +13,20 @@ public class CompanyProfile {
     private String indType;
     private String webSite;
     private String cmpDsp;
-
+    
     public CompanyProfile(){
-
+    	
     }
-    public CompanyProfile (String name, String email){
 
-    	//TODO: change according to our rule (use max number)
-    	this.cmpid = UUID.randomUUID().toString();
+    public CompanyProfile (String cmpid, String name, String email){
+
+    	this.cmpID = cmpid;
         this.name = name;
         this.email = email;
     }
     
     public CompanyProfile (String id, String name, String email,String addr,String telNum,String indType,String webSite,String cmpDsp){
-        this.cmpid = id;
+        this.cmpID = id;
         this.name = name;
         this.email = email;
         this.addr = addr;
@@ -39,10 +37,10 @@ public class CompanyProfile {
     }
     
     public String getId() {
-        return cmpid;
+        return cmpID;
     }
     public void setId(String cmpid) {
-        this.cmpid= cmpid;
+        this.cmpID= cmpid;
     }
     public String getName() {
         return name;
@@ -83,7 +81,8 @@ public class CompanyProfile {
     public String getCmpDsp() {
         return cmpDsp;
     }
-    public void setCmpDsp(String cmpDsp) {
+
+	public void setCmpDsp(String cmpDsp) {
         this.cmpDsp = cmpDsp;
     }
 }

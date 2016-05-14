@@ -1,7 +1,15 @@
 package au.edu.unsw.soacourse.hrSystem;
 
 import java.io.IOException;
+
+
+import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,18 +30,16 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
 
-
-
 import au.edu.unsw.soacourse.hrSystem.dao.CompanyProfileDao;
 import au.edu.unsw.soacourse.hrSystem.model.CompanyProfile;
 
-@Path("/companyProfile")
+@Path("/CompanyProfile")
 public class CompanyProfileRs {
 	// Return the list of books for client applications/programs
 	 CompanyProfileDao companyProfileDao = new CompanyProfileDao();
 		@Context
 		UriInfo uriInfo;
-		@Context
+		@Context 
 		Request request;
 		
 		//get specific company profile
@@ -41,40 +47,23 @@ public class CompanyProfileRs {
 		@GET
 		@Path("{cmpID}")
 		@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-		public CompanyProfile getUserProfile(@PathParam("cmpID") String cmpID) {
-			CompanyProfile c = companyProfileDao.get(cmpID);
+		public Response getCompanyProfile(@PathParam("cmpID") String cmpID) {
+		
+		CompanyProfile c = companyProfileDao.get(cmpID);
 		if(c==null) {
 			throw new RuntimeException("GET: companyProfile with" + cmpID +  " not found");
-		}
-		return c;
+		}	
+		
+		return Response.ok(c).build();
 		}
 
 	    // update company profile
 		//TODO: consider response
-		//TODO: when the id doesn't exist, create new company profile
 		@PUT
 		@Path("{cmpID}")
 		@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-		public Response putCompanyProfile(CompanyProfile c) {
-			return putAndGetResponse(c);
-			//TODO: Fix here so that it returns the updated book
-		}
-		private Response putAndGetResponse(CompanyProfile c) {
-			Response res;
-			if(companyProfileDao.get(c.getId()) != null) {
-				res = Response.noContent().build();
-			} else {
-				res = Response.created(uriInfo.getAbsolutePath()).build();
-			}
-			companyProfileDao.put(c);
-			return res;
-		}
-		
-	    // create new company profile
-		//TODO: consider response
-		@POST
-		@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-		public void newCompanyProfile(
+		public CompanyProfile putCompanyProfile(
+				@PathParam("cmpID") String cmpid,
 				@FormParam("name") String name,
 				@FormParam("email") String email,
 				@FormParam("addr") String addr,
@@ -83,13 +72,57 @@ public class CompanyProfileRs {
 				@FormParam("webSite") String webSite,
 				@FormParam("cmpDsp") String cmpDsp
 		) throws IOException {
-			CompanyProfile c = new CompanyProfile(name,email);
+						
+			System.out.println(cmpid);
+			
+			CompanyProfile c = new CompanyProfile(cmpid, name,email);
 			if (addr!=null) c.setAddr(addr);
 			if (telNum!=null) c.setTelNum(telNum);
 			if (indType!=null) c.setIndType(indType);
 			if (webSite!=null) c.setWebSite(webSite);
 			if (cmpDsp!=null) c.setCmpDsp(cmpDsp);
+
+			//if the id doesn't exist, create new company profile
+			if(companyProfileDao.get(c.getId()) == null)
+				companyProfileDao.post(c);
+			else
+				companyProfileDao.put(c);
+			
+		return c;
+		}
+		
+	    // create new company profile
+		//TODO: consider response
+		@POST
+		@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+		@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+		public Response newCompanyProfile(
+				@FormParam("name") String name,
+				@FormParam("email") String email,
+				@FormParam("addr") String addr,
+				@FormParam("telNum") String telNum,
+				@FormParam("indType") String indType,
+				@FormParam("webSite") String webSite,
+				@FormParam("cmpDsp") String cmpDsp
+		) throws MalformedURLException, URISyntaxException, UnknownHostException {
+
+			//create id using maximum number of cmpid
+			String cmpid = String.valueOf(Integer.valueOf(companyProfileDao.max())+1);
+			System.out.println(cmpid);
+
+			CompanyProfile c = new CompanyProfile(cmpid,name,email);
+			
+			if (addr!=null) c.setAddr(addr);
+			if (telNum!=null) c.setTelNum(telNum);
+			if (indType!=null) c.setIndType(indType);
+			if (webSite!=null) c.setWebSite(webSite);
+			if (cmpDsp!=null) c.setCmpDsp(cmpDsp);
+			
 			companyProfileDao.post(c);
+			
+			URL uri = new URL(uriInfo.getAbsolutePath().toURL() +"/"+ cmpid);
+			
+			return Response.seeOther(uri.toURI()).build();
 		}
 
 		//delete specific company profile
