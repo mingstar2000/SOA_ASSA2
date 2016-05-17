@@ -2,11 +2,32 @@ package au.edu.unsw.soacourse.hrSystem.dao;
 import java.sql.*;  
 import java.util.List;
 
+import au.edu.unsw.soacourse.hrSystem.model.CompanyProfile;
 import au.edu.unsw.soacourse.hrSystem.model.Review;
 
 //TODO: consider example value like 'Sunny's company' -> it can cause error because of "'" 
 public class ReviewDao {
 	public static String dbAddr = "jdbc:sqlite:c:/cs9322-Prac/workspace/FoundITService/db/foundITServer.db";  
+	
+	public  Review put(Review Review){
+        StringBuilder sql = new StringBuilder();
+        sql.append("UPDATE  tb_reviews SET reStaus1 ='").append(Review.getReStatus1()).append("'");
+        sql.append(", reStaus2 ='").append(Review.getReStatus2()).append("'");
+        sql.append(", magStatus ='").append(Review.getMagStatus()).append("'");
+        sql.append(" WHERE revID = '").append(Review.getRevID()).append("';");
+        System.out.println("sql is "+sql.toString()+"\n");
+        
+       // ConnectDB.updateDB(dbAddr, sql.toString());
+        
+        try {
+       	 List<Review> files  = ConnectDB.executeSQL(dbAddr,sql.toString(), new ReviewParser());
+            if(files != null && !files.isEmpty())
+                return files.get(0);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+	}
 	
 	public  boolean post(Review review){
 	

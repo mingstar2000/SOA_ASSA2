@@ -4,7 +4,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 public class CompanyProfile {
-
+	
     private String cmpID = "";
     private String name = "";
     private String email = "";

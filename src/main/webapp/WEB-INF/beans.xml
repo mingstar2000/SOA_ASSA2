@@ -12,7 +12,8 @@
             <bean class="au.edu.unsw.soacourse.hrSystem.ReviewRs"/>
             <bean class="au.edu.unsw.soacourse.hrSystem.HiringTeamRs"/>
             <bean class="au.edu.unsw.soacourse.hrSystem.JobPostingRs"/>
-            <bean class="au.edu.unsw.soacourse.hrSystem.ApplicationRs"/>                       
+            <bean class="au.edu.unsw.soacourse.hrSystem.ApplicationRs"/>   
+                                
         </jaxrs:serviceBeans>
         <jaxrs:providers>
             <bean class="org.codehaus.jackson.jaxrs.JacksonJsonProvider"/>
