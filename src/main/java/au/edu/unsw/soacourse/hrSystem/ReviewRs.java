@@ -232,8 +232,8 @@ public class ReviewRs {
 				@QueryParam("revID") String revid,
 				@FormParam("appID") String appid,
 				@FormParam("userID") String userid,
-				@FormParam("reStatus1") String reStatus1,
-				@FormParam("reStatus2") String reStatus2,
+				@FormParam("comment") String comment,
+				@FormParam("reStatus") String reStatus,
 				@FormParam("magStatus") String magStatus
 		) throws IOException, URISyntaxException {
 						
@@ -241,7 +241,7 @@ public class ReviewRs {
 			int ret_code = checkSecurity(SecurityKey, ShortKey, "PUT");
 			if (ret_code!= 200) return Response.status(ret_code).build();
 			
-			Review r = new Review(revid,appid,userid,reStatus1,reStatus2,magStatus);
+			Review r = new Review(revid,appid,userid,comment,reStatus,magStatus);
 
 			//if the revid doesn't exist, create new Review 
 			//TODO: basically it's impossible there is no existing revid

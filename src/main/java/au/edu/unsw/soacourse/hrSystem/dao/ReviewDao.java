@@ -12,7 +12,7 @@ public class ReviewDao {
 	public  Review put(Review Review){
         StringBuilder sql = new StringBuilder();
         sql.append("UPDATE  tb_reviews SET comment ='").append(Review.getComment()).append("'");
-        sql.append(", reStaus ='").append(Review.getReStatus()).append("'");
+        sql.append(", revStatus ='").append(Review.getReStatus()).append("'");
         sql.append(", magStatus ='").append(Review.getMagStatus()).append("'");
         sql.append(" WHERE revID = '").append(Review.getRevID()).append("';");
         System.out.println("sql is "+sql.toString()+"\n");
