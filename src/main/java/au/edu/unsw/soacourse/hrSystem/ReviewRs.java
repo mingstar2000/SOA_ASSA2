@@ -322,7 +322,7 @@ public class ReviewRs {
 				return 401;
 			//For authorization
 			if(annotation.equals("GET")){
-				if(ShortKey.equals("app-manager")==false & ShortKey.equals("app-reviwer")==false)
+				if(ShortKey.equals("app-manager")==false & ShortKey.equals("app-reviewer")==false)
 					return 403; //Forbidden
 			}
 			if(annotation.equals("POST")){
@@ -330,7 +330,7 @@ public class ReviewRs {
 					return 403; //Forbidden
 			}
 			if(annotation.equals("PUT")){
-				if(ShortKey.equals("app-reviwer")==false)
+				if(ShortKey.equals("app-reviewer")==false)
 					return 403; //Forbidden
 			}
 			return 200;
