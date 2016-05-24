@@ -133,7 +133,7 @@ public class ReviewRs {
 		int ret_code = checkSecurity(SecurityKey, ShortKey, "GET");
 		if (ret_code!= 200) return Response.status(ret_code).build();
 		
-		System.out.println("here111111111");
+		System.out.println("here111111111:" + appID);
 		
 		List<Review> as = ReviewDao.getApp(appID);
 		if(as==null) {
@@ -249,7 +249,9 @@ public class ReviewRs {
 			//      so.....consider what to do then
 			if(ReviewDao.getRev(r.getRevID()) == null){
 				if (ReviewDao.post(r)==true){
-					URL uri = new URL(uriInfo.getAbsolutePath().toURL() +"/"+ revid);
+					//URL uri = new URL(uriInfo.getAbsolutePath().toURL() +"/"+ revid);
+					URL uri = new URL(uriInfo.getBaseUriBuilder().build() +"/"+ revid);
+					System.out.println(uri.toString());
 					return Response.seeOther(uri.toURI()).build();
 				}
 				else
@@ -301,7 +303,9 @@ public class ReviewRs {
 			Review r = new Review(revid,appid,userid,comment,reStatus,magStatus);
 
 			if (ReviewDao.post(r)==true){
-				URL uri = new URL(uriInfo.getAbsolutePath().toURL() +"/get?revID="+ revid);
+				//TODO:modify the path because it include /new
+				URL uri = new URL(uriInfo.getBaseUri().toURL() +"review/get?revID="+ revid);
+				System.out.println(uri.toString());
 				return Response.seeOther(uri.toURI()).build();
 			}
 			else

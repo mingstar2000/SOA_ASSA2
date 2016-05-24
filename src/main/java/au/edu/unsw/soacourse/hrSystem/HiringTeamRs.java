@@ -61,15 +61,11 @@ public class HiringTeamRs {
 		//check the SecurityKey and ShortKey
 		int ret_code = checkSecurity(SecurityKey, ShortKey, "GET");
 		if (ret_code!= 200) return Response.status(ret_code).build();
-		
-		System.out.println("here111111111");
 			
 		List<HiringTeam> hs = hiringTeamDao.get(cmpID);
 		if(hs==null) {
 			throw new RuntimeException("GET: hiringTeam with" + cmpID +  " not found");
 		}
-
-		System.out.println("here22222");
 		
 		//for hateoas for body
 		for( HiringTeam h:hs){
@@ -81,9 +77,18 @@ public class HiringTeamRs {
 		    String kk = javax.ws.rs.core.Link.fromMethod(reviewRs.getClass(),"newReview").build().getUri().toString();
 		    System.out.println(kk);
 		    
+		    //String href = javax.ws.rs.core.Link.fromMethod(reviewRs.getClass(),"newReview").build().getUri().toString();
+		    String kk2 = javax.ws.rs.core.Link.fromMethod(reviewRs.getClass(),"getApplication").build().getUri().toString();
+		    System.out.println(kk);
+		    
 		    linkToSelf.setRel("post");
 		    linkToSelf.setHref(hrefRoot+kk);
 		    h.addHypermediaLink(linkToSelf);
+		    
+		    HypermediaLink LinktoScnd = new HypermediaLink();
+		    LinktoScnd.setRel("post");
+		    LinktoScnd.setHref(hrefRoot+kk2);
+		    h.addHypermediaLink(LinktoScnd);
 		}
 
 		//in order to response list, change the type into GenericEntity
