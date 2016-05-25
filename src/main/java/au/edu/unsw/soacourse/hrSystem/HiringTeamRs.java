@@ -19,6 +19,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.GenericEntity;
@@ -26,6 +27,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 import au.edu.unsw.soacourse.hrSystem.dao.HiringTeamDao;
@@ -49,7 +51,6 @@ public class HiringTeamRs {
 		Request request;
 		
 		//get hiring team members of specific company
-		//TODO: consider response	
 		@GET
 		@Path("/get")
 		@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
@@ -64,31 +65,31 @@ public class HiringTeamRs {
 			
 		List<HiringTeam> hs = hiringTeamDao.get(cmpID);
 		if(hs==null) {
-			throw new RuntimeException("GET: hiringTeam with" + cmpID +  " not found");
+			System.out.println("Hiring Team Not Found");
+			ResponseBuilder builder = Response.status(Status.NOT_FOUND); 
+			builder.type("text/html"); builder.entity("Hiring Team Not Found"); 
+			throw new WebApplicationException(builder.build()); 		
 		}
 		
 		//for hateoas for body
 		for( HiringTeam h:hs){
-			
-		    HypermediaLink linkToSelf = new HypermediaLink();
-		    String hrefRoot = javax.ws.rs.core.Link.fromResource(reviewRs.getClass()).build().getUri().toString();
-		    System.out.println(hrefRoot);
-		    //String href = javax.ws.rs.core.Link.fromMethod(reviewRs.getClass(),"newReview").build().getUri().toString();
-		    String kk = javax.ws.rs.core.Link.fromMethod(reviewRs.getClass(),"newReview").build().getUri().toString();
-		    System.out.println(kk);
+		    String base_uri = uriInfo.getBaseUri().toString();
+		    if (base_uri.endsWith("/")==true) base_uri = base_uri.substring(0, base_uri.length()-1);
+		    String resource_uri = javax.ws.rs.core.Link.fromResource(reviewRs.getClass()).build().getUri().toString();
+		    //first uri
+		    String new_method_uri = javax.ws.rs.core.Link.fromMethod(reviewRs.getClass(),"newReview").build().getUri().toString();
+		    //second uri
+		    String get_method_uri = javax.ws.rs.core.Link.fromMethod(reviewRs.getClass(),"getApplication").build().getUri().toString();
 		    
-		    //String href = javax.ws.rs.core.Link.fromMethod(reviewRs.getClass(),"newReview").build().getUri().toString();
-		    String kk2 = javax.ws.rs.core.Link.fromMethod(reviewRs.getClass(),"getApplication").build().getUri().toString();
-		    System.out.println(kk);
+		    HypermediaLink linkToPost = new HypermediaLink();
+		    linkToPost.setRel("post");
+		    linkToPost.setHref(base_uri+resource_uri+new_method_uri);
+		    h.addHypermediaLink(linkToPost);
 		    
-		    linkToSelf.setRel("post");
-		    linkToSelf.setHref(hrefRoot+kk);
-		    h.addHypermediaLink(linkToSelf);
-		    
-		    HypermediaLink LinktoScnd = new HypermediaLink();
-		    LinktoScnd.setRel("post");
-		    LinktoScnd.setHref(hrefRoot+kk2);
-		    h.addHypermediaLink(LinktoScnd);
+		    HypermediaLink LinktoGet = new HypermediaLink();
+		    LinktoGet.setRel("get");
+		    LinktoGet.setHref(base_uri+resource_uri+get_method_uri);
+		    h.addHypermediaLink(LinktoGet);
 		}
 
 		//in order to response list, change the type into GenericEntity
@@ -116,7 +117,10 @@ public class HiringTeamRs {
 		
 		HiringTeam h = hiringTeamDao.getMember(cmpID, userID);
 		if(h==null) {
-			throw new RuntimeException("GET: hiringTeam with" + cmpID + " and user ID = " + userID + " not found");
+			System.out.println("Hiring Team member with " + userID + "Not Found");
+			ResponseBuilder builder = Response.status(Status.NOT_FOUND); 
+			builder.type("text/html"); builder.entity("Hiring Team member with " + userID + "Not Found"); 
+			throw new WebApplicationException(builder.build()); 		
 		}	
 		return Response.ok(h).build();
 		}
@@ -146,14 +150,23 @@ public class HiringTeamRs {
 			//if the id doesn't exist, create new hiringTeam member
 			if(hiringTeamDao.getMember(h.getCmpID(), h.getUserID()) == null){
 				if (hiringTeamDao.post(h)==true){
-					URL uri = new URL(uriInfo.getAbsolutePath().toURL()+"/TeamMember/"+cmpID+"/"+userID);
+					URL uri = new URL(uriInfo.getAbsolutePath().toURL()+"/getMember?cmpID="+cmpID+"&userID="+userID);				                                                     
 					return Response.seeOther(uri.toURI()).build();
 				}
-				else
-					return Response.ok().build();
+				else{
+					System.out.println("Create new hiring team memeber failed");
+					ResponseBuilder builder = Response.status(Status.NOT_IMPLEMENTED); 
+					builder.type("text/html"); builder.entity("Create new hiring team memeber failed"); 
+					throw new WebApplicationException(builder.build()); 			
+				}
 			}
 			else {
-				hiringTeamDao.put(h);
+				if (hiringTeamDao.put(h) == null){
+					System.out.println("Hiring team memeber update failed");
+					ResponseBuilder builder = Response.status(Status.NOT_MODIFIED); 
+					builder.type("text/html"); builder.entity("Hiring team memeber update failed"); 
+					throw new WebApplicationException(builder.build());
+				}
 				return Response.ok(h).build();
 			}
 		}
@@ -189,9 +202,12 @@ public class HiringTeamRs {
 				URL uri = new URL(uriInfo.getAbsolutePath().toURL()+"/getMember?cmpID="+cmpID+"&userID="+userID);
 				return Response.seeOther(uri.toURI()).build();
 			}
-			else
-				return Response.ok().build();
-		
+			else{
+				System.out.println("Create new hiring team memeber failed");
+				ResponseBuilder builder = Response.status(Status.NOT_IMPLEMENTED); 
+				builder.type("text/html"); builder.entity("Create new hiring team memeber failed"); 
+				throw new WebApplicationException(builder.build()); 	
+			}
 		}
 
 		//delete all hiringTeam members of specific company
@@ -207,11 +223,14 @@ public class HiringTeamRs {
 			if (ret_code!= 200) return Response.status(ret_code).build();
 			
 			HiringTeam h = (HiringTeam) hiringTeamDao.delete(cmpID);
-			//TODO: consider response
-			if(h != null)
-				throw new RuntimeException("DELETE: HiringTeam with cmpID =" + cmpID + " not found");
+			if(h != null){
+				System.out.println("Delete hiring Team failed");
+				ResponseBuilder builder = Response.status(Status.NOT_IMPLEMENTED); 
+				builder.type("text/html"); builder.entity("Delete hiring Team failed"); 
+				throw new WebApplicationException(builder.build()); 
+			}
 			
-			return Response.ok("ok").build();
+			return Response.ok(Status.OK).build();
 		}
 
 		//delete specific hiringTeam member
@@ -228,11 +247,13 @@ public class HiringTeamRs {
 			if (ret_code!= 200) return Response.status(ret_code).build();
 				
 			HiringTeam h = (HiringTeam) hiringTeamDao.deleteMember(cmpID, userID);
-			//TODO: consider response
-			if(h != null)
-				throw new RuntimeException("DELETE: HiringTeam with cmpID =" + cmpID + "and userID="+ userID + " not found");
-			
-			return Response.ok("ok").build();
+			if(h != null){
+				System.out.println("Delete hiring Team member failed");
+				ResponseBuilder builder = Response.status(Status.NOT_IMPLEMENTED); 
+				builder.type("text/html"); builder.entity("Delete hiring Team member failed"); 
+				throw new WebApplicationException(builder.build());		
+			}
+			return Response.ok(Status.OK).build();
 		}
 		
 		//check authentication and authorization 

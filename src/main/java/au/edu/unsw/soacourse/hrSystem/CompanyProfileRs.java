@@ -31,6 +31,7 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -40,8 +41,7 @@ import au.edu.unsw.soacourse.hrSystem.dao.CompanyProfileDao;
 import au.edu.unsw.soacourse.hrSystem.model.CompanyProfile;
 import au.edu.unsw.soacourse.hrSystem.model.HypermediaLink;
 
-
-//TODO: check SecurityKey and ShortKey
+//header check SecurityKey and ShortKey
 //  1. check if SecurityKey is 'i-am-foundit'
 //  2. check if ShortKey is proper for the resource
 //          e.g, for company profile, ShortKey should be 'app-manager'
@@ -53,7 +53,6 @@ public class CompanyProfileRs {
 	// Return the list of books for client applications/programs
 	 CompanyProfileDao companyProfileDao = new CompanyProfileDao();
 
-	 
 		@Context
 		UriInfo uriInfo;
 		@Context 
@@ -75,23 +74,23 @@ public class CompanyProfileRs {
 			
 			CompanyProfile c = companyProfileDao.get(cmpID);
 			if(c==null) {
-				//TODO: what method is proper? and....which type? html/text/xml????
-				//throw new RuntimeException("GET: companyProfile with" + cmpID +  " not found");
-				ResponseBuilder builder = Response.status(400); 
-				builder.type("text/html"); 
-				builder.entity("<h3>The Compnay Profile ID " + cmpID + " Not Found</h3>"); 
+				System.out.println("Company Profile Not Found");
+				ResponseBuilder builder = Response.status(Status.NOT_FOUND); 
+				builder.type("text/html"); builder.entity("Company Profile Not Found"); 
 				throw new WebApplicationException(builder.build()); 		
 			}			
-			
-			 HypermediaLink linkToSelf = new HypermediaLink();
-			    String hrefRoot = javax.ws.rs.core.Link.fromResource(getClass()).build().getUri().toString();
-			    String href = javax.ws.rs.core.Link.fromMethod(getClass(),"getCompanyProfile").build().getUri().toString();
-			    linkToSelf.setHref(hrefRoot+href+ "/"+c.getId());		    
-			    linkToSelf.setRel("self");
-			    c.addHypermediaLink(linkToSelf);
-			
-			    ResponseBuilder builder = Response.ok(c); 
-				return builder.build();
+
+			//for hateoas for body	
+		    HypermediaLink linkToSelf = new HypermediaLink();
+		    String base_uri = uriInfo.getBaseUri().toString();
+		    if (base_uri.endsWith("/")==true) base_uri = base_uri.substring(0, base_uri.length()-1);
+		    String resource_uri = javax.ws.rs.core.Link.fromResource(getClass()).build().getUri().toString();
+		    String method_uri = javax.ws.rs.core.Link.fromMethod(getClass(),"getCompanyProfile").build().getUri().toString();
+		    linkToSelf.setRel("self");
+		    linkToSelf.setHref(base_uri+resource_uri+method_uri);		    	    
+		    c.addHypermediaLink(linkToSelf);
+
+		    return Response.ok(c).build();
 		}
 /*		//For hatetoas for header
 	    private Link[] getCompanyProfilelLinks(String cmpID) {
@@ -135,14 +134,23 @@ public class CompanyProfileRs {
 			//if the id doesn't exist, create new company profile
 			if(companyProfileDao.get(c.getId()) == null){
 				if (companyProfileDao.post(c)==true){
-					URL uri = new URL(uriInfo.getAbsolutePath().toURL() +"/"+ cmpid);
+					URL uri = new URL(uriInfo.getAbsolutePath().toURL() +"/get?cmpID="+ cmpid);
 					return Response.seeOther(uri.toURI()).build();
 				}
-				else
-					return Response.ok("ok").build();
+				else{
+					System.out.println("Create new company profile failed");
+					ResponseBuilder builder = Response.status(Status.NOT_IMPLEMENTED); 
+					builder.type("text/html"); builder.entity("Create new company profile failed"); 
+					throw new WebApplicationException(builder.build()); 
+				}
 			}
 			else {
-				companyProfileDao.put(c);
+				if (companyProfileDao.put(c) == null){
+					System.out.println("Company profile update failed");
+					ResponseBuilder builder = Response.status(Status.NOT_MODIFIED); 
+					builder.type("text/html"); builder.entity("Company profile update failed"); 
+					throw new WebApplicationException(builder.build());
+				}
 				return Response.ok(c).build();
 			}
 		}
@@ -186,8 +194,10 @@ public class CompanyProfileRs {
 				return Response.seeOther(uri.toURI()).build();
 			}
 			else
-				//TODO: consider the response
-				return Response.ok("ok").build();
+				System.out.println("Create new company profile failed");
+				ResponseBuilder builder = Response.status(Status.NOT_IMPLEMENTED); 
+				builder.type("text/html"); builder.entity("Create new company profile failed"); 
+				throw new WebApplicationException(builder.build()); 
 		}
 
 		//delete specific company profile
@@ -203,11 +213,16 @@ public class CompanyProfileRs {
 			int ret_code = checkSecurity(SecurityKey, ShortKey, "DELETE");
 			if (ret_code!= 200) return Response.status(ret_code).build();
 			
+			//TODO: delete return is always null even though it failed.
+			//      how to check if it is not success????
 			CompanyProfile c = (CompanyProfile) companyProfileDao.delete(cmpID);
-			if(c != null)
-				throw new RuntimeException("DELETE: companyProfile with" + cmpID +  " not found");
-				
-		return Response.ok("ok").build();
+			if(c != null){
+				System.out.println("Delete company profile failed");
+				ResponseBuilder builder = Response.status(Status.NOT_IMPLEMENTED); 
+				builder.type("text/html"); builder.entity("Delete company profile failed"); 
+				throw new WebApplicationException(builder.build()); 
+			}			
+			return Response.ok(Status.OK).build();
 		}
 		
 		//check authentication and authorization 
