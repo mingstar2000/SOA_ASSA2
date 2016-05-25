@@ -133,6 +133,12 @@ public class CompanyProfileRs {
 
 			//if the id doesn't exist, create new company profile
 			if(companyProfileDao.get(c.getId()) == null){
+				//create id using maximum number of cmpid
+				cmpid = companyProfileDao.max();
+				if (cmpid == null) cmpid = "1";
+				else cmpid = String.valueOf(Integer.valueOf(cmpid)+1);
+				c.setId(cmpid);
+
 				if (companyProfileDao.post(c)==true){
 					URL uri = new URL(uriInfo.getAbsolutePath().toURL() +"/get?cmpID="+ cmpid);
 					return Response.seeOther(uri.toURI()).build();

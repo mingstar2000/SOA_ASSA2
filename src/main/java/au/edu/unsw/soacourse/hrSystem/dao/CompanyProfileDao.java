@@ -1,4 +1,5 @@
 package au.edu.unsw.soacourse.hrSystem.dao;
+import java.nio.file.Files;
 import java.sql.*;  
 import java.util.List;
 
@@ -79,8 +80,7 @@ public class CompanyProfileDao {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        
-	return null;
+ 	return null;
 	}
 
 	//TODO: if there is no data...

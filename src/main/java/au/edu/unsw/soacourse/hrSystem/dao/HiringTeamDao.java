@@ -8,7 +8,7 @@ import au.edu.unsw.soacourse.hrSystem.model.HiringTeam;
 public class HiringTeamDao {
 	public static String dbAddr = "jdbc:sqlite:c:/cs9322-Prac/workspace/FoundITService/db/foundITServer.db";  
 	
-	public  HiringTeam put(HiringTeam hiringTeam){
+	public  HiringTeam put(HiringTeam hiringTeam, String old_userID){
 	         StringBuilder sql = new StringBuilder();
 	         sql.append("UPDATE  tb_hirTeam SET userID ='").append(hiringTeam.getUserID()).append("'");
 	         sql.append(", password ='").append(hiringTeam.getPassword()).append("'");
@@ -16,9 +16,10 @@ public class HiringTeamDao {
 	         sql.append(", name ='").append(hiringTeam.getName()).append("'");
 	         sql.append(", skills ='").append(hiringTeam.getSkills()).append("'");
 	         sql.append(" WHERE cmpID = '").append(hiringTeam.getCmpID()).append("' and ");
-	         sql.append("userID = '").append(hiringTeam.getUserID()).append("';");
+	         sql.append("userID = '").append(old_userID).append("';");
 	         System.out.println("sql is "+sql.toString()+"\n");
 	         
+	         System.out.println(sql);
 	         try {
 	        	 List<HiringTeam> files  = ConnectDB.executeSQL(dbAddr,sql.toString(), new HiringTeamParser());
 	             if(files != null && !files.isEmpty())

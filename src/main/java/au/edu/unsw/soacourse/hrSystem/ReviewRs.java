@@ -255,6 +255,12 @@ public class ReviewRs {
 					builder.type("text/html"); builder.entity("The result of auto-check of the applicant is not pass"); 
 					throw new WebApplicationException(builder.build()); 					
 				}
+
+				//create id using maximum number of revid
+				revid = ReviewDao.max();
+				if (revid == null) revid = "1";
+				else revid = String.valueOf(Integer.valueOf(revid)+1);
+				r.setRevID(revid);
 				
 				if (ReviewDao.post(r)==true){
 					//URL uri = new URL(uriInfo.getAbsolutePath().toURL() +"/"+ revid);

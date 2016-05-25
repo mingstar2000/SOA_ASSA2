@@ -135,6 +135,7 @@ public class HiringTeamRs {
 				@HeaderParam("ShortKey") String ShortKey,
 				@QueryParam("cmpID") String cmpID,
 				@QueryParam("userID") String userID,
+				@FormParam("new_userID") String new_userID,
 				@FormParam("password") String password,
 				@FormParam("name") String name,
 				@FormParam("skills") String skills
@@ -161,7 +162,8 @@ public class HiringTeamRs {
 				}
 			}
 			else {
-				if (hiringTeamDao.put(h) == null){
+				h.setUserID(new_userID);
+				if (hiringTeamDao.put(h, userID) == null){
 					System.out.println("Hiring team memeber update failed");
 					ResponseBuilder builder = Response.status(Status.NOT_MODIFIED); 
 					builder.type("text/html"); builder.entity("Hiring team memeber update failed"); 
@@ -180,6 +182,7 @@ public class HiringTeamRs {
 		public Response newHiringTeam(
 				@HeaderParam("SecurityKey") String SecurityKey, 
 				@HeaderParam("ShortKey") String ShortKey,
+				@FormParam("userID") String userID,
 				@FormParam("password") String password,
 				@FormParam("cmpID") String cmpID,
 				@FormParam("name") String name,
@@ -190,11 +193,6 @@ public class HiringTeamRs {
 			int ret_code = checkSecurity(SecurityKey, ShortKey, "POST");
 			if (ret_code!= 200) return Response.status(ret_code).build();
 			
-			//create userid using maximum number of userid of the cmpid
-			String userID = hiringTeamDao.max(cmpID);
-			if (userID == null) userID = "1";
-			else userID = String.valueOf(Integer.valueOf(userID)+1);			
-
 			HiringTeam h = new HiringTeam(userID,password,cmpID, name);	
 			if (skills!=null) h.setSkills(skills);
 			
