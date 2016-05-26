@@ -9,6 +9,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -17,6 +18,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
@@ -41,32 +43,55 @@ public class ApplicationRs {
 		@GET
 		@Path("/search")
 		@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-		public List<Application> getApplication(@QueryParam("appID") String appID,@QueryParam("jobID") String jobID,@QueryParam("userID") String userID) {
+		public Response getApplication(
+				@HeaderParam("SecurityKey") String SecurityKey, 
+				@HeaderParam("ShortKey") String ShortKey, 
+				@QueryParam("appID") String appID,
+				@QueryParam("jobID") String jobID,
+				@QueryParam("userID") String userID) {
+			//check the SecurityKey and ShortKey
+			System.out.println("start get in applicationRs");
+			int ret_code = SecurityRs.checkSecurity(SecurityKey, ShortKey, "GET");
+			int ret_code1 = SecurityRs.checkSecurityM(SecurityKey, ShortKey, "GET");
+			if ((ret_code != 200) && (ret_code1!= 200))return Response.status(ret_code1).build();
+			System.out.println("start get in applicationRs");
 			List<Application> applications = new ArrayList<Application>();
-			applications =  (List<Application>)applicationDao.select(appID, jobID, userID);
-		if(applications==null) {
-			System.out.println("nothing了！");
-			ResponseBuilder builder = Response.status(Status.BAD_REQUEST); 
-			builder.type("text/html"); 
-			builder.entity("<h3>The jobPsoting appID= " + appID + ",jobID="+jobID+",userID="+userID+" Not Found</h3>"); 
-			throw new WebApplicationException(builder.build()); 
-		}
-		for( Application ap:applications){
+			applications = (List<Application>) applicationDao.select(appID, jobID,
+					userID);
 			
-		    HypermediaLink linkToSelf = new HypermediaLink();
-		    String href = javax.ws.rs.core.Link.fromResource(getClass()).build().getUri().toString();
-		    linkToSelf.setRel("put");
-		    linkToSelf.setHref(href+"/"+ap.getAppId());
-		    System.out.println("test the hypermedia!"+ linkToSelf.getHref());
-		    ap.addHypermediaLink(linkToSelf);
-		    
-		    System.out.println("still ok?");
-		}
-		System.out.println("查看text"+ applications.get(0).getCvLetter());
-		return applications;
-		
+			if (applications == null) {
+				System.out.println("nothing了！");
+				ResponseBuilder builder = Response.status(Status.BAD_REQUEST);
+				builder.type("text/html");
+				builder.entity("<h3>The jobPsoting appID= " + appID + ",jobID="
+						+ jobID + ",userID=" + userID + " Not Found</h3>");
+				throw new WebApplicationException(builder.build());
+			}
+			
+			for (Application ap : applications) {
+
+				HypermediaLink linkToSelf = new HypermediaLink();
+				String href = javax.ws.rs.core.Link
+						.fromMethod(getClass(), "getApplication").build().getUri()
+						.toString();
+				String hrefRoot = javax.ws.rs.core.Link.fromResource(getClass())
+						.build().getUri().toString();
+				linkToSelf.setRel("get");
+				linkToSelf.setHref("http://localhost:8080/FoundITService"
+						+ hrefRoot + href + "?appID=" + ap.getAppId());
+				System.out.println("test the hypermedia!" + linkToSelf.getHref());
+				ap.addHypermediaLink(linkToSelf);
+
+				System.out.println("still ok?");
+			}
+			System.out.println("查看text" + applications.get(0).getCvLetter());
+			GenericEntity<List<Application>> entity = new GenericEntity<List<Application>>(applications) {};
+
+			return Response.ok(entity).build();
 
 		}
+
+
 		/*@GET
 		@Path("/get")
 		@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})

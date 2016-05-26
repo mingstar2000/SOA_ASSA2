@@ -14,6 +14,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -34,7 +35,6 @@ import au.edu.unsw.soacourse.hrSystem.dao.ApplicationDao;
 import au.edu.unsw.soacourse.hrSystem.dao.JobPostingDao;
 import au.edu.unsw.soacourse.hrSystem.model.HypermediaLink;
 import au.edu.unsw.soacourse.hrSystem.model.JobPosting;
-import au.edu.unsw.soacourse.hrSystem.model.Review;
 
 
 @Path("/jobPosting")
@@ -57,9 +57,21 @@ public class JobPostingRs {
 		@GET
 		@Path("/search")
 		@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-		public Response getJob(@QueryParam("jobID") String jobID,@QueryParam("cmpID") String cmpID,
-				@QueryParam("name") String name,@QueryParam("salaryRate") String salaryRate,@QueryParam("posType") String posType
-				,@QueryParam("location") String location,@QueryParam("status") String status,@QueryParam("jobDsp") String jobDsp) throws MalformedURLException {
+		public Response getJob(
+				@HeaderParam("SecurityKey") String SecurityKey, 
+				@HeaderParam("ShortKey") String ShortKey,
+				@QueryParam("jobID") String jobID,
+				@QueryParam("cmpID") String cmpID,
+				@QueryParam("name") String name,
+				@QueryParam("salaryRate") String salaryRate,
+				@QueryParam("posType") String posType,
+				@QueryParam("location") String location,
+				@QueryParam("status") String status,
+				@QueryParam("jobDsp") String jobDsp) 
+						throws MalformedURLException {
+			int ret_code = SecurityRs.checkSecurity(SecurityKey, ShortKey, "GET");
+			int ret_code1 = SecurityRs.checkSecurityM(SecurityKey, ShortKey, "GET");
+			if ((ret_code != 200) && (ret_code1!= 200))return Response.status(ret_code1).build();
 			
 			System.out.println("查询开始了！");
 			List<JobPosting> jobPostings = new ArrayList<JobPosting>();
@@ -88,26 +100,26 @@ public class JobPostingRs {
 			    jp.addHypermediaLink(linkToNext);
 			    
 			    linkToSelf.setRel("self");
-			    String url =uriInfo.getAbsolutePath().toURL().toString()+"/search/?jobID="+jp.getJobID().toString();
+			    String url =uriInfo.getAbsolutePath().toURL().toString()+"?jobID="+jp.getJobID().toString();
 			    linkToSelf.setHref(url);
 			    jp.addHypermediaLink(linkToSelf);
 			    
 			    System.out.println("still ok?");
 			}
-
-			//in order to response list, change the type into GenericEntity
-			GenericEntity<List<JobPosting>> jobP = new GenericEntity<List<JobPosting>>(jobPostings) {};
-			
-			return Response.ok(jobP).build();		
-
-
+			GenericEntity<List<JobPosting>> jobP = new GenericEntity<List<JobPosting>>(jobPostings){};
+			return Response.ok(jobP).build() ;
 		}
 		
 		@PUT
 		@Path("{jobID}")
 		@Consumes({MediaType.APPLICATION_XML,MediaType.APPLICATION_JSON})
-		public Response putJob(@PathParam("jobID") String jobID,JobPosting b) throws MalformedURLException, URISyntaxException {
-			
+		public Response putJob(
+				@HeaderParam("SecurityKey") String SecurityKey, 
+				@HeaderParam("ShortKey") String ShortKey,
+				@PathParam("jobID") String jobID,JobPosting b) throws MalformedURLException, URISyntaxException {
+			int ret_code = SecurityRs.checkSecurity(SecurityKey, ShortKey, "PUT");
+			int ret_code1 = SecurityRs.checkSecurityM(SecurityKey, ShortKey, "PUT");
+			if ((ret_code != 200) && (ret_code1!= 200))return Response.status(ret_code1).build();
 			b.setJobID(jobID);
 			return putAndGetResponse(b);
 			//TODO: Fix here so that it returns the updated book
@@ -147,8 +159,11 @@ public class JobPostingRs {
 		
 		
 		@POST
-		@Consumes({MediaType.APPLICATION_XML,MediaType.APPLICATION_JSON,MediaType.APPLICATION_FORM_URLENCODED})
-		public Response postJob(@FormParam("cmpID") String cmpID,
+		@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+		public Response postJob(
+				@HeaderParam("SecurityKey") String SecurityKey, 
+				@HeaderParam("ShortKey") String ShortKey,
+				@FormParam("cmpID") String cmpID,
 				@FormParam("name") String name,
 				@FormParam("salaryRate") String salaryRate,
 				@FormParam("posType") String posType,
@@ -159,6 +174,9 @@ public class JobPostingRs {
 			System.out.println("开始了！");
 			System.out.println("cmpID ="+cmpID);
 			System.out.println("name ="+name);
+			
+			int ret_code1 = SecurityRs.checkSecurityM(SecurityKey, ShortKey, "POST");
+			if (ret_code1 != 200)return Response.status(ret_code1).build();
 			if(cmpID==null || name==null){
 				ResponseBuilder builder = Response.status(Status.BAD_REQUEST );
 				builder.type("text/html");
@@ -181,8 +199,12 @@ public class JobPostingRs {
 		}
 		@DELETE	
 		@Path("{jobID}")
-		public void deleteApplication(@PathParam("jobID") String jobID) {
-			
+		public Response deleteApplication(
+				@HeaderParam("SecurityKey") String SecurityKey, 
+				@HeaderParam("ShortKey") String ShortKey,
+				@PathParam("jobID") String jobID) {
+			int ret_code1 = SecurityRs.checkSecurityM(SecurityKey, ShortKey, "POST");
+			if (ret_code1 != 200)return Response.status(ret_code1).build();
 			JobPosting c = jobPostingDao.select(jobID, null, null, null, null, null, null,null).get(0);
 			
 			if(c == null)
@@ -194,9 +216,6 @@ public class JobPostingRs {
 				}
 			c.setStatus(ConstParam.STACLOSE);
 			jobPostingDao.update(c);
-			
-			//TODO: consider response
-			
+			return Response.ok("delete job sucessfully").build();
 		}
-
 }

@@ -78,12 +78,18 @@ public class UserProfileRs {
 			return builder.build();
 			}
 			
+			
 		@PUT
 		@Path("{ProfileID}")
 		@Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-		public Response putUserProfile(@PathParam("ProfileID") String ProfileID,UserProfile b) throws MalformedURLException {
+		public Response putUserProfile(
+				@HeaderParam("SecurityKey") String SecurityKey, 
+				@HeaderParam("ShortKey") String ShortKey, 
+				@PathParam("ProfileID") String ProfileID,UserProfile b) throws MalformedURLException {
 			b.setId(ProfileID);
 			System.out.println("put 开始了");
+			int ret_code = SecurityRs.checkSecurity(SecurityKey, ShortKey, "PUT");
+			if (ret_code!= 200) return Response.status(ret_code).build();
 			return putAndGetResponse(b);
 			//TODO: Fix here so that it returns the updated book
 		}
@@ -103,6 +109,8 @@ public class UserProfileRs {
 		@POST
 		@Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON,MediaType.APPLICATION_FORM_URLENCODED})
 		public Response newUserProfile(
+				@HeaderParam("SecurityKey") String SecurityKey, 
+				@HeaderParam("ShortKey") String ShortKey, 
 				@FormParam("name") String name,
 				@FormParam("email") String email,
 				@FormParam("addr") String addr,
@@ -113,6 +121,10 @@ public class UserProfileRs {
 				@FormParam("experience") String experience,
 				@FormParam("perDsp") String perDsp
 		) throws IOException, URISyntaxException {
+			int ret_code = SecurityRs.checkSecurity(SecurityKey, ShortKey, "POST");
+			if (ret_code!= 200) return Response.status(ret_code).build();
+	
+			
 			UserProfile b = new UserProfile(name,email);
 			if (addr!=null) b.setAddr(addr);
 			if (telNum!=null) b.setTelNum(telNum);
@@ -134,7 +146,12 @@ public class UserProfileRs {
 		//delete specific user profile
 		@DELETE	
 		@Path("{userID}")
-		public void deleteUser(@PathParam("userID") String userID) {
+		public Response deleteUser(
+				@HeaderParam("SecurityKey") String SecurityKey, 
+				@HeaderParam("ShortKey") String ShortKey, 
+				@PathParam("userID") String userID) {
+			int ret_code = SecurityRs.checkSecurity(SecurityKey, ShortKey, "POST");
+			if (ret_code!= 200) return Response.status(ret_code).build();
 			
 			
 			UserProfile c = userProfileDao.get(userID);
@@ -149,7 +166,8 @@ public class UserProfileRs {
 				}
 		
 			userProfileDao.delete(userID);
-
+			
+			return Response.ok("delete success").build();
 		}
 			
 }
