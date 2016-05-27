@@ -13,7 +13,7 @@ public class JobPosting {
     private String name = "";
     private String salaryRate = "";
     private String posType = "";
-    @XmlElements(@XmlElement(name="link", type=HypermediaLink.class))
+//    @XmlElements(@XmlElement(name="link", type=HypermediaLink.class))
     private List<HypermediaLink> links = new ArrayList<HypermediaLink>();
     public JobPosting(){
     	
@@ -96,6 +96,16 @@ public class JobPosting {
 		System.out.println("add 一个 link");
 		links.add(linkToSelf);
 		}
+	
+	
+	public List<HypermediaLink> getLinks() {
+		return links;
+	}
+	public void setLinks(List<HypermediaLink> links) {
+		this.links = links;
+	}
+
+
 	private String location = "";
     private String status = "";
     private String jobDsp = "";

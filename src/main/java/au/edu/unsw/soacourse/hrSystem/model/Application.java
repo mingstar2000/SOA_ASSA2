@@ -18,7 +18,7 @@ public class Application {
     private String cvLetter = "";
     private String autoStatus = "0";
     private String jobID = "";
-    @XmlElements(@XmlElement(name="link", type=HypermediaLink.class))
+   // @XmlElements(@XmlElement(name="link", type=HypermediaLink.class))
     private List<HypermediaLink> links = new ArrayList<HypermediaLink>();
 
     public List<HypermediaLink> getLinks() {
