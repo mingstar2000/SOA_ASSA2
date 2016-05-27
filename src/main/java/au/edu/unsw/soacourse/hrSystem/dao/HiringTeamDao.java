@@ -6,7 +6,7 @@ import au.edu.unsw.soacourse.hrSystem.model.HiringTeam;
 
 //TODO: consider example value like 'Sunny's company' -> it can cause error because of "'" 
 public class HiringTeamDao {
-	public static String dbAddr = "jdbc:sqlite:c:/cs9322-Prac/workspace/FoundITService/db/foundITServer.db";  
+	public static String dbAddr = "jdbc:sqlite:/Users/zhangyun/git/FoundITService/db/foundITServer.db";  
 	
 	public  HiringTeam put(HiringTeam hiringTeam, String old_userID){
 	         StringBuilder sql = new StringBuilder();

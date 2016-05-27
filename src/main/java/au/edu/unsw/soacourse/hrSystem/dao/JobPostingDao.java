@@ -9,7 +9,7 @@ import au.edu.unsw.soacourse.hrSystem.model.JobPosting;;
 public class JobPostingDao {
 
 
-public static String dbAddr = "jdbc:sqlite:c:/cs9322-Prac/workspace/FoundITService/db/foundITServer.db";  
+	public static String dbAddr = "jdbc:sqlite:/Users/zhangyun/git/FoundITService/db/foundITServer.db";   
 	
 	public  JobPosting update(JobPosting jobPosting){
 	         String sql = "UPDATE  tb_jobPosting SET  cmpID ='"+

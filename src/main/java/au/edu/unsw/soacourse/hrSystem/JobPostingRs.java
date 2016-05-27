@@ -44,6 +44,7 @@ public class JobPostingRs {
 	
 	JobPostingDao jobPostingDao = new JobPostingDao();
 	ApplicationRs applicationRs = new ApplicationRs();
+	CompanyProfileRs companyProfileRs = new CompanyProfileRs();
 	ApplicationDao applicationDao = new ApplicationDao();
 		@Context
 		UriInfo uriInfo;
@@ -56,7 +57,7 @@ public class JobPostingRs {
 		
 		@GET
 		@Path("/search")
-		@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+		@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 		public Response getJob(
 				@HeaderParam("SecurityKey") String SecurityKey, 
 				@HeaderParam("ShortKey") String ShortKey,
@@ -69,11 +70,13 @@ public class JobPostingRs {
 				@QueryParam("status") String status,
 				@QueryParam("jobDsp") String jobDsp) 
 						throws MalformedURLException {
+			System.out.println("查询开始了！"+SecurityKey+ShortKey);
 			int ret_code = SecurityRs.checkSecurity(SecurityKey, ShortKey, "GET");
 			int ret_code1 = SecurityRs.checkSecurityM(SecurityKey, ShortKey, "GET");
+			System.out.println("security code"+ret_code+"retcode1"+ret_code1);
 			if ((ret_code != 200) && (ret_code1!= 200))return Response.status(ret_code1).build();
 			
-			System.out.println("查询开始了！");
+			
 			List<JobPosting> jobPostings = new ArrayList<JobPosting>();
 			jobPostings = (List<JobPosting>) jobPostingDao.select(jobID, cmpID, name, salaryRate, posType, location, status, jobDsp);
 			if(jobPostings==null) {
@@ -89,16 +92,28 @@ public class JobPostingRs {
 				
 			    HypermediaLink linkToSelf = new HypermediaLink();
 			    HypermediaLink linkToNext = new HypermediaLink();
+			    HypermediaLink linkToCmp = new HypermediaLink();
 			    String hrefRoot = javax.ws.rs.core.Link.fromResource(applicationRs.getClass()).build().getUri().toString();
-		
-			    String href = javax.ws.rs.core.Link.fromMethod(applicationRs.getClass(),"postApplication").build().getUri().toString();
+			    String baseUri = uriInfo.getBaseUri().toString();
+			    if(baseUri.endsWith("/") == true) baseUri = baseUri.substring(0,baseUri.length()-1);
+			    //next
+			    //String href = javax.ws.rs.core.Link.fromMethod(applicationRs.getClass(),"postApplication").build().getUri().toString();
 			    String kk = javax.ws.rs.core.Link.fromMethod(applicationRs.getClass(),"postApplication").param("jobID", jp.getJobID()).build().getUri().toString();
 			     
 			    linkToNext.setRel("post");
-			    linkToNext.setHref(hrefRoot+kk);
-			    System.out.println("test the hypermedia!"+ linkToNext.getHref());
+			    linkToNext.setHref(baseUri+hrefRoot+kk);
+			    System.out.println("test the hypermedia1!"+ linkToNext.getHref());
 			    jp.addHypermediaLink(linkToNext);
-			    
+			    //company
+			    String link = javax.ws.rs.core.Link.fromMethod(companyProfileRs.getClass(),"getCompanyProfile").build().getUri().toString();
+			    String linkRoot = javax.ws.rs.core.Link.fromResource(companyProfileRs.getClass()).build().getUri().toString();
+			     
+			    linkToCmp.setRel("get");
+			    linkToCmp.setHref(baseUri+linkRoot+link+"?cmpID="+jp.getCmpID().toString());
+			    System.out.println("test the hypermedia2!"+ linkToCmp.getHref());
+			   
+			    jp.addHypermediaLink(linkToCmp);
+			    //self
 			    linkToSelf.setRel("self");
 			    String url =uriInfo.getAbsolutePath().toURL().toString()+"?jobID="+jp.getJobID().toString();
 			    linkToSelf.setHref(url);
@@ -116,11 +131,27 @@ public class JobPostingRs {
 		public Response putJob(
 				@HeaderParam("SecurityKey") String SecurityKey, 
 				@HeaderParam("ShortKey") String ShortKey,
-				@PathParam("jobID") String jobID,JobPosting b) throws MalformedURLException, URISyntaxException {
+				@PathParam("jobID") String jobID,
+				@FormParam("cmpID") String cmpID,
+				@FormParam("name") String name,
+				@FormParam("salaryRate") String salaryRate,
+				@FormParam("posType") String posType,
+				@FormParam("location") String location,
+				@FormParam("status") String status,
+				@FormParam("jobDsp") String jobDsp) throws MalformedURLException, URISyntaxException {
+			
 			int ret_code = SecurityRs.checkSecurity(SecurityKey, ShortKey, "PUT");
 			int ret_code1 = SecurityRs.checkSecurityM(SecurityKey, ShortKey, "PUT");
 			if ((ret_code != 200) && (ret_code1!= 200))return Response.status(ret_code1).build();
+			
+			JobPosting b =new JobPosting();
 			b.setJobID(jobID);
+			b.setJobDsp(jobDsp);
+			b.setLocation(location);
+			b.setName(name);
+			b.setPosType(posType);
+			b.setSalaryRate(salaryRate);
+			b.setStatus(status);
 			return putAndGetResponse(b);
 			//TODO: Fix here so that it returns the updated book
 		}
@@ -140,7 +171,35 @@ public class JobPostingRs {
 				res = Response.ok(b).link(url, "self"); 
 			
 			} else if (jobPostings.get(0).getStatus().equals(ConstParam.STAOPEN) ) {
-
+				JobPosting jb = jobPostings.get(0);
+				if(b.getCmpID() == null || b.getCmpID().isEmpty())
+				{
+					b.setCmpID(jb.getCmpID());
+				}
+				if(b.getJobDsp()== null || b.getJobDsp().isEmpty())
+				{
+					b.setJobDsp(jb.getJobDsp());
+				}
+				if(b.getLocation() == null || b.getLocation().isEmpty())
+				{
+					b.setLocation(jb.getLocation());
+				}
+				if(b.getName() == null || b.getName().isEmpty())
+				{
+					b.setName(jb.getName());
+				}
+				if(b.getPosType() == null || b.getPosType().isEmpty())
+				{
+					b.setPosType(jb.getPosType());
+				}
+				if(b.getSalaryRate() == null || b.getSalaryRate().isEmpty())
+				{
+					b.setSalaryRate(jb.getSalaryRate());
+				}
+				if(b.getStatus() == null || b.getStatus().isEmpty())
+				{
+					b.setStatus(jb.getStatus());
+				}
 				jobPostingDao.update(b);
 				String url =uriInfo.getAbsolutePath().toURL().toString()+"/search/?jobID="+jobPostings.get(0).getJobID().toString();
 				res = Response.ok(b).link(url, "self"); 
